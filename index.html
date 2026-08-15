@@ -83,6 +83,10 @@
   .authPanel input { flex:1; min-width:180px; padding:9px 12px; border-radius:8px; border:1px solid rgba(0,229,255,.3); background:rgba(0,0,0,.35); color:#eaf2ff; font-size:14px; }
   .authPanel button { pointer-events:auto; cursor:pointer; border:none; border-radius:8px; padding:9px 16px; font-weight:800; font-size:13px; letter-spacing:.5px; color:#061018; background:linear-gradient(90deg,#00e5ff,#54f0c8); }
   .authPanel button.ghost { background:rgba(255,255,255,.1); color:#cdd8e8; }
+  .authPanel button.gbtn { width:100%; padding:12px; font-size:15px; background:#fff; color:#1a1a1a; }
+  .authPanel .orDiv { text-align:center; color:#7a8; font-size:11px; margin:10px 0 8px; position:relative; }
+  .authPanel .orDiv::before, .authPanel .orDiv::after { content:''; position:absolute; top:50%; width:38%; height:1px; background:rgba(255,255,255,.12); }
+  .authPanel .orDiv::before { left:0; } .authPanel .orDiv::after { right:0; }
   .authPanel .who { color:#54f0c8; font-weight:700; }
   .authPanel .msg { margin-top:8px; font-size:12px; color:#ffd166; min-height:14px; }
   .authPanel .hint { font-size:11px; color:#7a8; }
@@ -1697,6 +1701,23 @@ async function sendMagicLink(email){
   }catch(e){ setAuthMsg('전송 실패: '+(e.message||e)); }
 }
 async function logoutCloud(){ if(fbAuth){ try{ await fbAuth.signOut(); }catch(e){} } authUser=null; renderAuthUI(); refreshStats(); }
+// Google 계정으로 로그인 (팝업) — 메일 대기 없이 즉시 로그인
+async function googleLogin(){
+  if(!fbAuth){ setAuthMsg('클라우드가 설정되지 않았어요 (로컬 모드)'); return; }
+  setAuthMsg('Google 로그인 창을 여는 중…');
+  try{
+    const provider = new window.firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);   // 성공 시 onAuthStateChanged 가 UI 갱신
+  }catch(e){
+    if(e && e.code==='auth/operation-not-allowed'){
+      setAuthMsg('Firebase 콘솔에서 Google 로그인을 먼저 켜주세요 (Authentication → Sign-in method → Google).');
+    } else if(e && (e.code==='auth/popup-closed-by-user' || e.code==='auth/cancelled-popup-request')){
+      setAuthMsg('로그인 창이 닫혔어요. 다시 시도해 주세요.');
+    } else {
+      setAuthMsg('로그인 실패: '+(e.message||e));
+    }
+  }
+}
 
 // 클라우드(Firestore)에서 내 세션을 불러와 프로필 통계로 집계(로그인 시)
 async function fetchCloudProfile(){
@@ -1733,9 +1754,13 @@ function renderAuthUI(){
                    '<button class="ghost" id="logoutBtn">로그아웃</button></div><div class="msg"></div>';
     const b=document.getElementById('logoutBtn'); if(b) b.onclick=logoutCloud;
   } else {
-    el.innerHTML = '<div class="row"><input id="emailInput" type="email" placeholder="이메일 주소" autocomplete="email">'+
-                   '<button id="loginBtn">로그인 링크 받기</button></div>'+
-                   '<div class="hint">비밀번호 없이 메일로 온 링크를 누르면 로그인됩니다.</div><div class="msg"></div>';
+    el.innerHTML = '<div class="row"><button id="googleBtn" class="gbtn">🔵 Google 계정으로 로그인</button></div>'+
+                   '<div class="hint" style="text-align:center">가장 빠른 방법 — 팝업에서 계정만 선택하면 끝(메일 대기 없음)</div>'+
+                   '<div class="orDiv">또는 이메일로</div>'+
+                   '<div class="row"><input id="emailInput" type="email" placeholder="이메일 주소" autocomplete="email">'+
+                   '<button id="loginBtn" class="ghost">링크 받기</button></div>'+
+                   '<div class="msg"></div>';
+    const g=document.getElementById('googleBtn'); if(g) g.onclick=googleLogin;
     const b=document.getElementById('loginBtn'), inp=document.getElementById('emailInput');
     if(b) b.onclick=()=>sendMagicLink(inp.value.trim());
     if(inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMagicLink(inp.value.trim()); });
