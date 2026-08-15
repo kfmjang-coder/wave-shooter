@@ -58,6 +58,19 @@
   .overlay { position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; overflow-y:auto; padding:16px 0; background:radial-gradient(ellipse at center,#131a2e 0%,#070a12 100%); color:#fff; }
   .overlay .card { margin:auto; }
   .card { max-width:560px; width:90%; text-align:center; padding:40px; }
+  /* 시작 화면: 좌우 폭을 활용한 2단 레이아웃 (세로 스크롤 최소화) */
+  #startScreen .card.startCard { max-width:1080px; width:94%; padding:18px 40px 20px; }
+  #startScreen .card.startCard h1 { font-size:38px; letter-spacing:3px; margin-bottom:2px; }
+  #startScreen .card.startCard p { margin:6px 0; font-size:14px; line-height:1.55; }
+  #startScreen .card.startCard .charSelectLabel { margin:8px 0 6px; }
+  #startScreen .card.startCard .btn { margin-top:10px; }
+  .topRow { display:flex; gap:16px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:6px; }
+  .topRow .authPanel, .topRow .statsPanel { margin:0; flex:1 1 380px; max-width:460px; }
+  .startCols { display:flex; gap:36px; justify-content:center; align-items:flex-start; text-align:left; margin-top:6px; }
+  .startCol { flex:1 1 0; min-width:0; max-width:480px; }
+  .startCol .keys { max-width:none; margin:8px 0 4px; }
+  .startCol #charSelect { justify-content:flex-start; }
+  @media (max-width:900px){ .startCols{ flex-direction:column; align-items:center; } .startCol{ max-width:480px; width:100%; } }
   .card h1 { font-size:56px; font-weight:900; letter-spacing:4px; background:linear-gradient(90deg,#00e5ff,#ffd166); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .card h1.dead { background:linear-gradient(90deg,#ff3b6b,#ff8a5b); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .card .tag { color:#7fd8e8; letter-spacing:6px; font-size:13px; margin-bottom:10px; }
@@ -212,30 +225,40 @@
 
 <!-- START -->
 <div id="startScreen" class="overlay">
-  <div class="card">
+  <div class="card startCard">
     <div class="tag">BROWSER · 3D · FPS</div>
     <h1>WAVE SHOOTER</h1>
-    <div id="authPanel" class="authPanel"></div>
-    <div id="statsPanel" class="statsPanel"></div>
-    <p>몰려오는 적을 처치해 <b style="color:#54f0c8">돈</b>을 모으고, 웨이브 사이 <b style="color:#00e5ff">상점</b>에서 무기·방어구·회복약을 사세요.<br><b style="color:#ffd166">머리를 맞히면 헤드샷(2.6배 데미지·보너스 돈)</b>, 다리는 데미지가 적습니다.</p>
-    <div class="keys">
-      <div><b>WASD</b> 이동</div><div><b>마우스</b> 조준</div>
-      <div><b>짧게 클릭</b> 사격</div><div><b>우클릭</b> 조준/줌</div>
-      <div><b>1~9 · 휠</b> 무기교체</div><div><b>1번 · 칼</b> 근접</div>
-      <div><b>R</b> 재장전</div><div><b>휠 ↑↓</b> 무기 순환</div>
-      <div><b>V</b> 1인칭↔3인칭</div><div><b>B</b> 상점 열기</div>
-      <div><b>H</b> 회복약 사용</div><div><b>방탄조끼</b> 상점 구매</div>
-      <div><b>SPACE</b> 점프</div><div><b>SHIFT</b> 달리기</div>
-      <div><b>방향키</b> 시야 회전(보조)</div><div><b>P · ESC</b> 일시정지</div>
+    <div class="topRow">
+      <div id="authPanel" class="authPanel"></div>
+      <div id="statsPanel" class="statsPanel"></div>
     </div>
-    <div class="charSelectLabel" style="margin-top:10px">스킬 · SKILLS</div>
-    <div class="keys">
-      <div><b>Q</b> 💨 대시(순간이동)</div><div><b>E</b> ✚ 치료(HP회복)</div>
-      <div><b>F</b> 🔥 광폭화(연사·이속·피해↑)</div><div><b>X</b> ☢ 궁극기(10처치 충전·광역폭발)</div>
+    <div class="startCols">
+      <div class="startCol">
+        <div class="charSelectLabel">게임 방법 · HOW TO</div>
+        <p>몰려오는 적을 처치해 <b style="color:#54f0c8">돈</b>을 모으고, 웨이브 사이 <b style="color:#00e5ff">상점(B)</b>에서 무기·방어구·회복약을 사세요.<br><b style="color:#ffd166">머리를 맞히면 헤드샷(2.6배 데미지·보너스 돈)</b>, 다리는 데미지가 적습니다.</p>
+        <div class="charSelectLabel">조작 · CONTROLS</div>
+        <div class="keys">
+          <div><b>WASD</b> 이동</div><div><b>마우스</b> 조준</div>
+          <div><b>짧게 클릭</b> 사격</div><div><b>우클릭</b> 조준/줌</div>
+          <div><b>1~9 · 휠</b> 무기교체</div><div><b>1번 · 칼</b> 근접</div>
+          <div><b>R</b> 재장전</div><div><b>휠 ↑↓</b> 무기 순환</div>
+          <div><b>V</b> 1인칭↔3인칭</div><div><b>B</b> 상점 열기</div>
+          <div><b>H</b> 회복약 사용</div><div><b>방탄조끼</b> 상점 구매</div>
+          <div><b>SPACE</b> 점프</div><div><b>SHIFT</b> 달리기</div>
+          <div><b>방향키</b> 시야 회전(보조)</div><div><b>P · ESC</b> 일시정지</div>
+        </div>
+      </div>
+      <div class="startCol">
+        <div class="charSelectLabel">스킬 · SKILLS</div>
+        <div class="keys">
+          <div><b>Q</b> 💨 대시(순간이동)</div><div><b>E</b> ✚ 치료(HP회복)</div>
+          <div><b>F</b> 🔥 광폭화(연사·이속·피해↑)</div><div><b>X</b> ☢ 궁극기(10처치·광역폭발)</div>
+        </div>
+        <div class="charSelectLabel">캐릭터 선택 · CHARACTER</div>
+        <div id="charSelect"></div>
+        <p style="font-size:12px;color:#7a8;margin-top:10px">마우스 잠금이 안 되는 환경에서는 <b style="color:#ffd166">짧게 클릭=사격</b>, <b style="color:#ffd166">0.5초 누른 채 드래그=시야 회전</b>, 방향키로도 조준할 수 있어요.</p>
+      </div>
     </div>
-    <div class="charSelectLabel">캐릭터 선택 · CHARACTER</div>
-    <div id="charSelect"></div>
-    <p style="font-size:12px;color:#7a8">마우스 잠금이 안 되는 환경에서는 <b style="color:#ffd166">짧게 클릭=사격</b>, <b style="color:#ffd166">0.5초 누른 채 드래그=시야 회전</b>, 방향키로도 조준할 수 있어요.</p>
     <button class="btn" id="startBtn">게임 시작 ▶</button>
   </div>
 </div>
