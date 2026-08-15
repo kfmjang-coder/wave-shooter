@@ -1301,6 +1301,7 @@ function updateEnemyBar(e){
 
 // 마지막 1명 남은 적을 발광 표시 (오라·비콘·펄스)
 let lastGlowAnnounced = false;
+let lastEnemyClock = 0, lastDodgeLevel = -1;   // 마지막 적 회피 단계(시간이 갈수록 상승)
 function markLastEnemy(e){
   if(!e.glow){
     e.glow = new THREE.Group();
@@ -2080,6 +2081,7 @@ function startWave(n){
   enemiesToSpawn = 4 + n*2;
   spawnTimer = 0;
   lastGlowAnnounced = false;   // 마지막 적 안내 재설정
+  lastEnemyClock = 0; lastDodgeLevel = -1;   // 회피 단계 초기화
   if(n>1) waveFlash();   // 라운드 전환 화면 효과
   showCenter('WAVE '+n, n===1?'적을 처치하세요':'적이 더 강해집니다', 2000);
   updateHUD();
@@ -2479,6 +2481,13 @@ function animate(){
 
     // --- 적 업데이트 (칼잡이=근접 / 총잡이=원거리 사격) ---
     const lastOne = waveActive && enemiesToSpawn<=0 && enemies.length===1;
+    // 마지막 적: 시간이 지날수록 회피 단계가 조금씩 상승 (0~5)
+    if(lastOne) lastEnemyClock += dt; else { lastEnemyClock = 0; lastDodgeLevel = -1; }
+    const dodgeLevel = Math.min(5, Math.floor(lastEnemyClock / 3.5));
+    if(lastOne && dodgeLevel > lastDodgeLevel){
+      lastDodgeLevel = dodgeLevel;
+      if(dodgeLevel >= 1) showCenter('⚠ 회피 강화 Lv.'+dodgeLevel, '마지막 적이 점점 더 잘 피합니다', 1100);
+    }
     for(let i=enemies.length-1;i>=0;i--){
       const e = enemies[i];
       if(lastOne) markLastEnemy(e);   // 마지막 1명 발광
@@ -2516,6 +2525,26 @@ function animate(){
           if(!enemyBlocked(e.mesh.position.x+sx*step, e.mesh.position.z, feetY)) e.mesh.position.x += sx*step;
           else if(!enemyBlocked(e.mesh.position.x, e.mesh.position.z+sz*step, feetY)) e.mesh.position.z += sz*step;
         }
+        moving = true;
+      }
+      // === 마지막 적: 좌우 저크 + 조준 시 사이드스텝 회피 (단계별 상승) ===
+      if(lastOne && dodgeLevel>0 && dist>0.01){
+        const perpX = -toP.z/dist, perpZ = toP.x/dist;   // 플레이어 방향에 수직
+        // 저크 방향 주기적 전환 (레벨 높을수록 빠르게)
+        e.dodgeFlip = (e.dodgeFlip||0) - dt;
+        if(e.dodgeFlip<=0){ e.dodgeDir = (Math.random()<0.5?-1:1); e.dodgeFlip = 1.2 - dodgeLevel*0.14; }
+        let dodgeMag = e.speed * (0.35 + dodgeLevel*0.24);
+        // 플레이어가 조준 중이면 즉시 옆으로 피함
+        const camDir = camera.getWorldDirection(new THREE.Vector3());
+        const cl = Math.hypot(camDir.x, camDir.z) || 1;
+        const aim = (camDir.x/cl)*(-toP.x/dist) + (camDir.z/cl)*(-toP.z/dist);
+        if(aim > (0.975 - dodgeLevel*0.004) && dist>3){
+          dodgeMag *= 1.9;
+          if(e.dodgeFlip < 0.9 - dodgeLevel*0.1){ e.dodgeDir = -(e.dodgeDir||1); e.dodgeFlip = 0.4; }
+        }
+        const sx = perpX*e.dodgeDir*dodgeMag*dt, sz = perpZ*e.dodgeDir*dodgeMag*dt;
+        if(!enemyBlocked(e.mesh.position.x+sx, e.mesh.position.z, feetY)) e.mesh.position.x += sx; else e.dodgeDir = -(e.dodgeDir||1);
+        if(!enemyBlocked(e.mesh.position.x, e.mesh.position.z+sz, feetY)) e.mesh.position.z += sz; else e.dodgeDir = -(e.dodgeDir||1);
         moving = true;
       }
       // 항상 플레이어를 바라봄
