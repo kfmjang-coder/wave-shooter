@@ -1574,13 +1574,15 @@ function saveBest(v){ try { localStorage.setItem('waveShooterBest', v); } catch(
    ▶ 아래 CLOUD.firebase 에 본인 Firebase 웹앱 설정값을 넣으면 "진짜 로그인"이 켜집니다.
      (비워두면 자동으로 로컬 기록 모드로 동작합니다. 설정법은 함께 드린 가이드 참고)
    ============================================================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyA47XJ9SSuI67w3I03l3pgQEqA6rcAYcdI",
-  authDomain: "wave-shooter-c2efa.firebaseapp.com",
-  projectId: "wave-shooter-c2efa",
-  storageBucket: "wave-shooter-c2efa.firebasestorage.app",
-  messagingSenderId: "18172501296",
-  appId: "1:18172501296:web:39fe49e79c07b090257cf5"
+const CLOUD = {
+  firebase: {
+    apiKey:            'AIzaSyA47XJ9SSuI67w3I03l3pgQEqA6rcAYcdI',
+    authDomain:        'wave-shooter-c2efa.firebaseapp.com',
+    projectId:         'wave-shooter-c2efa',
+    storageBucket:     'wave-shooter-c2efa.firebasestorage.app',
+    messagingSenderId: '18172501296',
+    appId:             '1:18172501296:web:39fe49e79c07b090257cf5',
+  },
 };
 const FB_VER = '10.12.2';
 let fbAuth = null, fbDb = null;   // Firebase Auth / Firestore
