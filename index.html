@@ -581,6 +581,7 @@ let curWeaponKey = 'pistol';
 let lastShot = 0, reloading = false, reloadEnd = 0;
 let money = 0;                 // 처치 시 획득, 상점에서 무기 구매
 let ads = false;              // 우클릭 조준(줌)
+let sniperScoped = false;     // 스나이퍼 좌클릭 조준경 토글 (1번 확대 · 2번 발사+해제)
 let armor = 0;                 // 방어구 (피해 절반 흡수)
 const ARMOR_MAX = 100;
 let medkits = 0;              // 회복약 소지 수 (H키로 사용)
@@ -1538,7 +1539,7 @@ document.addEventListener('mouseup', e=>{
   clearTimeout(holdTimer);
   if(state==='playing' && !pointerLocked){
     const held = performance.now() - holdStart;
-    if(!dragLook && held < HOLD_MS) shoot();   // 짧게 클릭 → 사격
+    if(!dragLook && held < HOLD_MS) primaryFire();   // 짧게 클릭 → 사격(스나이퍼는 조준경 토글)
   }
   dragLook=false; showDragBadge(false);
 });
@@ -1558,6 +1559,17 @@ addEventListener('wheel', e=>{
 document.addEventListener('contextmenu', e=>{ if(state==='playing'||state==='shop') e.preventDefault(); });
 document.addEventListener('mousedown', e=>{ if(e.button===2 && state==='playing') ads=true; });
 document.addEventListener('mouseup',   e=>{ if(e.button===2) ads=false; });
+
+// 좌클릭 주 동작: 스나이퍼는 조준경 토글(1번 확대 · 2번 발사+해제), 그 외엔 일반 사격
+function primaryFire(){
+  if(curWeaponKey==='sniper' && !thirdPerson && !reloading){
+    if(!sniperScoped){ sniperScoped=true; return; }  // 1번째: 조준경 확대
+    shoot();               // 2번째: 발사
+    sniperScoped=false;    //          + 조준경 해제
+    return;
+  }
+  shoot();
+}
 
 // 마우스룩: 잠금이면 항상 상대이동 / 비잠금이면 0.5초 이상 누른 채 드래그할 때만
 document.addEventListener('mousemove', e=>{
@@ -1858,6 +1870,7 @@ function switchWeapon(key){
   }
   curWeaponKey = key;
   ads = false;
+  sniperScoped = false;   // 무기 교체 시 조준경 해제
   meleeSwing = 0;
   buildGunModel(key);
   updateHUD();
@@ -2383,7 +2396,8 @@ function animate(){
     charModel.rotation.y = Math.atan2(-Math.sin(player.yaw), -Math.cos(player.yaw));
 
     // === 줌(우클릭 조준) FOV 부드럽게 ===
-    const targetFov = BASE_FOV / (ads ? WEAPONS[curWeaponKey].zoom : 1);
+    const zoomActive = ads || (sniperScoped && curWeaponKey==='sniper');
+    const targetFov = BASE_FOV / (zoomActive ? WEAPONS[curWeaponKey].zoom : 1);
     if(Math.abs(camera.fov - targetFov) > 0.05){
       camera.fov += (targetFov - camera.fov) * Math.min(1, dt*12);
       camera.updateProjectionMatrix();
@@ -2414,7 +2428,7 @@ function animate(){
     const w = WEAPONS[curWeaponKey];
     if(pointerLocked && mouseDown){
       if(w.auto) shoot();
-      else if(!shoot._fired){ shoot(); shoot._fired=true; }
+      else if(!shoot._fired){ shoot._fired=true; primaryFire(); }
     }
     if(!mouseDown) shoot._fired=false;
     // 칼: 누르고 있으면 끊김 없이 초고속 연속 베기 (프레임률과 무관하게 최대 100/초)
@@ -2664,7 +2678,7 @@ function animate(){
     }
 
     // 스나이퍼 조준경 오버레이 (1인칭 줌 시)
-    const scoped = ads && curWeaponKey==='sniper' && !thirdPerson;
+    const scoped = (ads || sniperScoped) && curWeaponKey==='sniper' && !thirdPerson;
     scopeEl.classList.toggle('hidden', !scoped);
     document.getElementById('crosshair').style.opacity = scoped ? 0 : '';
 
@@ -2689,7 +2703,7 @@ function resetGame(){
   moneyPops.forEach(m=>scene.remove(m.sp)); moneyPops.length=0;
   landDip=0; turnYaw=0; turnPitch=0;
   score=0; wave=0; elapsed=0; enemiesToSpawn=0; waveActive=false; betweenWaves=0;
-  money=300; ads=false; armor=0; medkits=0;   // 시작 자금 지급
+  money=300; ads=false; sniperScoped=false; armor=0; medkits=0;   // 시작 자금 지급
   // 스킬 초기화
   for(const id in skills){ skills[id].t=0; if(id==='ult') skills[id].charge=0; }
   dashTime=0; berserkUntil=0; healUntil=0; updateSkillBar();
